@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 import abi from "./abi.json";
-const contract = "0x7e0b629297738c2984708094f5587a7167D3D682";
+const contract = "0x5Fb8CE74D05CaA9C13caF939f56E60C36e5CF508";
 const NETWORK = "4";
 const NETWORKNAME = "Rinkeby Testnet";
 
