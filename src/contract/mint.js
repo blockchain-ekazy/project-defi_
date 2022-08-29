@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 import abi from "./abi.json";
-const contract = "0x5Fb8CE74D05CaA9C13caF939f56E60C36e5CF508";
+const contract = "0x5a2Af978d230644d096Af901771a378BCBc6a101";
 const NETWORK = "4";
 const NETWORKNAME = "Rinkeby Testnet";
 
@@ -27,7 +27,7 @@ const Mint = () => {
     setMaxallowed((await ct.mint_perTxn()).toNumber());
     setprice_common((await ct.price()) / 10 ** 18);
     setprice_oneOfone((await ct.price_oneOfone()) / 10 ** 18);
-    settotalCommon((await ct.common_Id()).toNumber());
+    settotalCommon((await ct.common_Id()).toNumber() - 1);
     settotalOneofOne(((await ct.sale_Id()).toNumber() / 10000).toFixed(0) - 1);
   }
 
@@ -74,16 +74,16 @@ const Mint = () => {
     m = m[0];
 
     let balance = (await provider.getBalance(m)).toString() / 10 ** 18;
-    console.log(balance);
-
-    if (balance < price_common * quantity)
-      toast.error("Insufficient funds in wallet!");
 
     const signer = provider.getSigner();
     const ct = new ethers.Contract(contract, abi, signer);
+    let p = (await ct.price()) * quantity;
+    if (balance < price_common * quantity)
+      toast.error("Insufficient funds in wallet!");
+
     await toast.promise(
       ct.mint_common(String(quantity), {
-        value: String(price_common * quantity * 10 ** 18),
+        value: String(p),
       }),
       {
         pending: "Waiting Confirmation on blockchain!!",
