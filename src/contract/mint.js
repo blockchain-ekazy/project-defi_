@@ -3,10 +3,30 @@ import { ethers } from "ethers";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
+import { MerkleTree } from "merkletreejs";
+import keccak256 from "keccak256";
+import { white } from "./whitelist.js";
+
 import abi from "./abi.json";
-const contract = "0x5a2Af978d230644d096Af901771a378BCBc6a101";
+const contract = "0x40FEfB0D43f6dd518E762dB873C4723fC8372745";
 const NETWORK = "4";
 const NETWORKNAME = "Rinkeby Testnet";
+
+const leaf = white.map((addr) => keccak256(addr));
+const merkleTree = new MerkleTree(leaf, keccak256, { sortPairs: true });
+
+function checkWhitelist(a) {
+  const check = keccak256(a);
+  const proof = merkleTree.getHexProof(check);
+  const root = merkleTree.getRoot();
+
+  return merkleTree.verify(proof, check, root);
+}
+
+function getProof(a) {
+  const check = keccak256(a);
+  return merkleTree.getHexProof(check);
+}
 
 const Mint = () => {
   const [quantity, setQuantity] = useState(1);
@@ -36,6 +56,8 @@ const Mint = () => {
   }, []);
 
   async function connect() {
+    console.log(merkleTree.getRoot().toString("hex"));
+
     if (!window.ethereum) {
       toast.error("Wallet not found!!");
       return;
@@ -77,20 +99,49 @@ const Mint = () => {
 
     const signer = provider.getSigner();
     const ct = new ethers.Contract(contract, abi, signer);
-    let p = (await ct.price()) * quantity;
-    if (balance < price_common * quantity)
-      toast.error("Insufficient funds in wallet!");
 
-    await toast.promise(
-      ct.mint_common(String(quantity), {
-        value: String(p),
-      }),
-      {
-        pending: "Waiting Confirmation on blockchain!!",
-        success: "Success!!",
-        error: "Failed!!",
+    const status = (await ct.status()).toNumber();
+
+    if (status == 0) {
+      toast.error("Sale Not Started!");
+      return;
+    }
+
+    let p = (await ct.price()) * quantity;
+    if (balance < price_common * quantity) {
+      toast.error("Insufficient funds in wallet!");
+      return;
+    }
+    if (status == 1) {
+      if (!checkWhitelist(m)) {
+        toast.error("Not Whitelisted!");
+        return;
       }
-    );
+
+      await toast.promise(
+        ct.mint_common_WL(String(quantity), getProof(m), {
+          value: String(p),
+        }),
+        {
+          pending: "Waiting Confirmation on blockchain!!",
+          success: "Success!!",
+          error: "Failed!!",
+        }
+      );
+      return;
+    }
+    if (status == 2) {
+      await toast.promise(
+        ct.mint_common(String(quantity), {
+          value: String(p),
+        }),
+        {
+          pending: "Waiting Confirmation on blockchain!!",
+          success: "Success!!",
+          error: "Failed!!",
+        }
+      );
+    }
   }
 
   async function mint_oneOfone() {
