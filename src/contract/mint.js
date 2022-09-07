@@ -8,7 +8,7 @@ import keccak256 from "keccak256";
 import { white } from "./whitelist.js";
 
 import abi from "./abi.json";
-const contract = "0x40FEfB0D43f6dd518E762dB873C4723fC8372745";
+const contract = "0xb25caBd8bf9F393479EF984C75aAA422A1Bece59";
 const NETWORK = "4";
 const NETWORKNAME = "Rinkeby Testnet";
 
@@ -47,8 +47,8 @@ const Mint = () => {
     setMaxallowed((await ct.mint_perTxn()).toNumber());
     setprice_common((await ct.price()) / 10 ** 18);
     setprice_oneOfone((await ct.price_oneOfone()) / 10 ** 18);
-    settotalCommon((await ct.common_Id()).toNumber() - 1);
-    settotalOneofOne(((await ct.sale_Id()).toNumber() / 10000).toFixed(0) - 1);
+    settotalCommon((await ct.totalSupply()).toNumber() - 10);
+    settotalOneofOne((await ct.sale_Id()).toNumber() - 1);
   }
 
   useEffect(() => {
@@ -162,14 +162,13 @@ const Mint = () => {
     m = m[0];
 
     let balance = (await provider.getBalance(m)).toString() / 10 ** 18;
-    console.log(balance);
 
     if (balance < price_oneOfone) toast.error("Insufficient funds in wallet!");
 
     const signer = provider.getSigner();
     const ct = new ethers.Contract(contract, abi, signer);
     await toast.promise(
-      ct.mint_oneOfone(String(quantity), {
+      ct.mint_oneOfone({
         value: String(price_oneOfone * 10 ** 18),
       }),
       {
