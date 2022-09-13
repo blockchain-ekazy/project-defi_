@@ -8,9 +8,9 @@ import keccak256 from "keccak256";
 import { white } from "./whitelist.js";
 
 import abi from "./abi.json";
-const contract = "0xb25caBd8bf9F393479EF984C75aAA422A1Bece59";
-const NETWORK = "4";
-const NETWORKNAME = "Rinkeby Testnet";
+const contract = "0x5460687A450450355722C489877CF6C2ef54374C";
+const NETWORK = "1";
+const NETWORKNAME = "Ethereum";
 
 const leaf = white.map((addr) => keccak256(addr));
 const merkleTree = new MerkleTree(leaf, keccak256, { sortPairs: true });
@@ -41,7 +41,7 @@ const Mint = () => {
 
   async function initialize() {
     const provider = new ethers.providers.JsonRpcProvider(
-      "https://rinkeby.infura.io/v3/275e79e94ded4372a3c6510f53718bc7"
+      "https://mainnet.infura.io/v3/97d9f5fedfa34db7a15d53259ffe34c2"
     );
     const ct = new ethers.Contract(contract, abi, provider);
     setMaxallowed((await ct.mint_perTxn()).toNumber());
@@ -56,7 +56,7 @@ const Mint = () => {
   }, []);
 
   async function connect() {
-    console.log(merkleTree.getRoot().toString("hex"));
+    console.log("0x" + merkleTree.getRoot().toString("hex"));
 
     if (!window.ethereum) {
       toast.error("Wallet not found!!");
@@ -181,7 +181,7 @@ const Mint = () => {
 
   async function checkFree(add) {
     const provider = new ethers.providers.JsonRpcProvider(
-      "https://rinkeby.infura.io/v3/275e79e94ded4372a3c6510f53718bc7"
+      "https://mainnet.infura.io/v3/97d9f5fedfa34db7a15d53259ffe34c2"
     );
     const ct = new ethers.Contract(contract, abi, provider);
     setRemainingMints((await ct.freeMints(String(add))).toNumber());
